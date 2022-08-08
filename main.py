@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 import logging
 import cloudscraper
 from bs4 import BeautifulSoup as Soup
@@ -22,10 +23,6 @@ log = logging.getLogger()
 
 class CFScraper:
     def __init__(self, addon_name):
-        self.scraper = cloudscraper.create_scraper(
-            browser={"browser": "firefox", "platform": "windows", "mobile": False}
-        )
-
         if addon_name == cf_mirror_addon_name:
             log.warning("WARNING: Default Addon Name Being Used")
         self.addon_name = addon_name
@@ -44,6 +41,14 @@ class CFScraper:
             "WoW Wrath of the Lich King Classic": "-wrath",
         }
 
+        self.__create_scraper()
+
+    def __create_scraper(self):
+        self.scraper = cloudscraper.create_scraper(
+            browser={},  # RNG Browser Agents
+            interpreter='nodejs'
+        )
+
     def get_file_name(self, full_href):
         download_url = full_href.replace(self.curseforge_download_base, self.curseforge_download_full)
         response = self.scraper.get(download_url)
@@ -57,6 +62,14 @@ class CFScraper:
 
     def get_download_mapping(self):
         response = self.scraper.get(self.curseforge_info_url)
+
+        if response.status_code != 200:
+            log.error(
+                f"ERROR: {self.addon_name} failed at download on url"
+                f" {self.curseforge_info_url} -- error code {response.status_code}"
+            )
+            return None
+
         soup = Soup(response.content, features="html.parser")
 
         download_element_selector = "div[class='cf-sidebar-inner'] > *"
@@ -123,7 +136,17 @@ class CFScraper:
 
     def run(self):
         log.info(f"Pulling files for addon: {self.addon_name}")
-        mapping = self.get_download_mapping()
+
+        count = 0
+        while count < 10:
+            mapping = self.get_download_mapping()
+            if mapping:
+                break
+            log.warning("Didn't find mapping, retrying...")
+            self.__create_scraper()
+            time.sleep(count)
+            count += 1
+
         if not mapping:
             raise Exception("No Downloads Found")
         log.info("Mapping Finalized! Downloading Files from CDN...")
