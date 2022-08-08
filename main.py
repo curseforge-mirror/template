@@ -34,6 +34,7 @@ class CFScraper:
         self.curseforge_addon_base = f"{self.curseforge_wow_base}/{self.addon_name}"
         self.curseforge_info_url = f"{self.curseforge_base}{self.curseforge_addon_base}"
         self.curseforge_download_base = f"{self.curseforge_addon_base}/files/"
+        self.curseforge_download_full = f"{self.curseforge_base}{self.curseforge_download_base}"
         self.curseforge_cdn_url = "https://edge.forgecdn.net/files"
 
         self.gv_name_scheme_lookup = {
@@ -42,19 +43,27 @@ class CFScraper:
             "WoW Burning Crusade Classic": "-bc",
             "WoW Wrath of the Lich King Classic": "-wrath",
         }
-    
-    def special_mapping_handling(self, mapping):
-        return mapping
+
+    def get_file_name(self, full_href):
+        download_url = full_href.replace(self.curseforge_download_base, self.curseforge_download_full)
+        response = self.scraper.get(download_url)
+        soup = Soup(response.content, features="html.parser")
+
+        filename_element_selector = "span[class='text-sm']"
+
+        filename_element = soup.select(filename_element_selector)[0]
+
+        return filename_element.text.replace(".zip", "")
 
     def get_download_mapping(self):
         response = self.scraper.get(self.curseforge_info_url)
-        soup = Soup(response.content)
+        soup = Soup(response.content, features="html.parser")
 
         download_element_selector = "div[class='cf-sidebar-inner'] > *"
         download_game_version_selector = "a"
         download_url_version_selector = "li > div > a[class='overflow-tip truncate']"
 
-        download_element = soup.select(download_element_selector, features="html.parser")
+        download_element = soup.select(download_element_selector)
 
         curseforge_mapping = {
             "WoW Retail": None,
@@ -71,9 +80,9 @@ class CFScraper:
                 .select(download_url_version_selector)[0]
                 .get_attribute_list("href")[0]
                 .replace(self.curseforge_download_base, ""),
-                "file_name": download_element[x + 1]
-                .select(download_url_version_selector)[0]
-                .text.replace(self.curseforge_download_base, ""),
+                "file_name": self.get_file_name(
+                    download_element[x + 1].select(download_url_version_selector)[0].get_attribute_list("href")[0]
+                ),
             }
 
         curseforge_mapping = {k: v for k, v in curseforge_mapping.items() if v}
@@ -117,8 +126,6 @@ class CFScraper:
         mapping = self.get_download_mapping()
         if not mapping:
             raise Exception("No Downloads Found")
-        log.info("Mapping Built! Running specialized handling for mapping...")
-        mapping = self.special_mapping_handling(mapping)
         log.info("Mapping Finalized! Downloading Files from CDN...")
         self.download_files(mapping)
 
