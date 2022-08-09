@@ -10,6 +10,7 @@ This specific repo does nothing but acts as a template to build upon!
 This is a mirror of Author's Addon 
 
 - [Curseforge URL](https://www.curseforge.com/wow/addons/Addon)
+- [Github URL]()
 
 ----
 
