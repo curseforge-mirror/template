@@ -23,8 +23,10 @@ log = logging.getLogger()
 
 class CFScraper:
     def __init__(self, addon_name):
+
         if addon_name == cf_mirror_addon_name:
             log.warning("WARNING: Default Addon Name Being Used")
+
         self.addon_name = addon_name
         self.curseforge_base = "https://www.curseforge.com"
         self.curseforge_wow_base = "/wow/addons"
