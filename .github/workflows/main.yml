@@ -40,6 +40,7 @@ jobs:
         name: v${{ steps.current-time.outputs.formattedTime }}
         draft: false
         prerelease: false
+        bodyFile: README.md
         artifacts: "*.zip"
         artifactContentType: application/zip
         token: ${{ secrets.GITHUB_TOKEN }}
