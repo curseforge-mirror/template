@@ -17,3 +17,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           source_repo_path: curseforge-mirror/template
           upstream_branch: master
+          pr_labels: template-sync
