@@ -1,4 +1,5 @@
 import json
+import os
 
 # Flake8 makes big strings so hard sometimes...
 README_TEMPLATE = (
@@ -30,6 +31,14 @@ def rewrite_readme(addon_author, addon_url_name, addon_plain_name):
         file.write(
             README_TEMPLATE.format(addon_string=addon_plain_name, author=addon_author, addon_url=addon_url_name)
         )
+
+
+def export_variables_to_github_env(addon_author, addon_url_name, addon_plain_name):
+    env_file = os.getenv('GITHUB_ENV')
+
+    with open(env_file, "a") as myfile:
+        myfile.write(f"ADDON_AUTHOR={addon_author}")
+        myfile.write(f"ADDON_NAME={addon_plain_name}")
 
 
 if __name__ == "__main__":

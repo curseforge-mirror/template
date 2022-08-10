@@ -38,9 +38,23 @@ jobs:
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git commit -m "Add changes" -a
+          git commit -m "Update Repo with Addon Info" -a
       - name: Push changes
         uses: ad-m/github-push-action@master
         with:
-          ssh: true
+          github_token: ${{ env.REPO_SETUP_TOKEN || secrets.GITHUB_TOKEN }}
           branch: ${{ github.ref }}
+      - name: Update Repo Description
+        shell: bash
+        run: |
+          curl --silent -X PATCH \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/$GITHUB_REPOSITORY \
+            -d '{"description":"Mirror of $env.ADDON_AUTHOR's $env.ADDON_NAME."}'
+          
+          curl --silent -X GET \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.baptiste-preview+json" \
+            https://api.github.com/repos/$GITHUB_REPOSITORY \
+            | jq --exit-status '.is_template == false';
