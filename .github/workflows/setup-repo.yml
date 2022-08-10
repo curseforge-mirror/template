@@ -56,4 +56,4 @@ jobs:
             -H "Authorization: token ${{ env.REPO_SETUP_TOKEN || secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github+json" \
             https://api.github.com/repos/$GITHUB_REPOSITORY \
-            -d "{\"description\":\"Mirror of $ADDON_AUTHOR's $ADDON_NAME.\", \"has_issues\":true}" > /dev/null
+            -d "{\"description\":\"Mirror of $ADDON_AUTHOR's $ADDON_NAME.\", \"has_issues\":false, \"has_wiki\":false}" > /dev/null
