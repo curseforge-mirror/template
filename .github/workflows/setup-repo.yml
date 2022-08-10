@@ -1,0 +1,44 @@
+name: Setup repository
+on:
+  push:
+    paths:
+      - setup.json
+jobs:
+  setup:
+    name: Reinitialize repository
+    runs-on: ubuntu-latest
+    env:
+      REPO_SETUP_TOKEN: ${{ secrets.REPO_SETUP_TOKEN }}
+    steps:
+      - name: Do not run on template repository
+        shell: bash
+        run: |
+          curl --silent -X GET \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.baptiste-preview+json" \
+            https://api.github.com/repos/$GITHUB_REPOSITORY \
+            | jq --exit-status '.is_template == false';
+
+      - uses: actions/checkout@v2
+        with:
+          token: ${{ env.REPO_SETUP_TOKEN || secrets.GITHUB_TOKEN }}
+
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+        cache: 'pip'
+
+    - name: Run Setup Script
+      run: python repo_setup.py
+      env:
+        ADDON_NAME: ADDON_NAME_HERE
+    - name: Commit files
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        git commit -m "Add changes" -a
+    - name: Push changes
+      uses: ad-m/github-push-action@master
+      with:
+      	ssh: true
+        branch: ${{ github.ref }}

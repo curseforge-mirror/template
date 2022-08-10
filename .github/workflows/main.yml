@@ -2,7 +2,7 @@ name: Pull and Upload Curseforge Files
 on:
   workflow_dispatch:
   # schedule:
-  #   - cron: '0 */3 * * *' # runs every 3 hours
+  #   - cron: '0 */3 * * *'
 
 jobs:
   pull_and_upload_files:
@@ -19,7 +19,7 @@ jobs:
     - uses: actions/setup-python@v4
       with:
         python-version: '3.10'
-        cache: 'pip' # caching pip dependencies
+        cache: 'pip'
 
     - run: pip install -r requirements.txt
 
