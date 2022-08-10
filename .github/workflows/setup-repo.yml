@@ -35,18 +35,6 @@ jobs:
         env:
           ADDON_NAME: ADDON_NAME_HERE
 
-      - name: Commit files
-        run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git commit -m "Update Repo with Addon Info" -a
-
-      - name: Push changes
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ env.REPO_SETUP_TOKEN || secrets.GITHUB_TOKEN }}
-          branch: ${{ github.ref }}
-
       - name: Update Repo Description
         shell: bash
         env:
@@ -58,3 +46,15 @@ jobs:
             -H "Accept: application/vnd.github+json" \
             https://api.github.com/repos/$GITHUB_REPOSITORY \
             -d "{\"description\":\"Mirror of $ADDON_AUTHOR's $ADDON_NAME.\", \"has_issues\":false, \"has_wiki\":false}" > /dev/null
+
+      - name: Commit files
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git commit -m "Update Repo with Addon Info" -a
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ env.REPO_SETUP_TOKEN || secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
