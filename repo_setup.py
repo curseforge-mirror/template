@@ -37,8 +37,7 @@ def export_variables_to_github_env(addon_author, addon_url_name, addon_plain_nam
     env_file = os.getenv('GITHUB_ENV')
 
     with open(env_file, "a") as myfile:
-        myfile.write(f"ADDON_AUTHOR={addon_author}")
-        myfile.write(f"ADDON_NAME={addon_plain_name}")
+        myfile.write(f"ADDON_AUTHOR={addon_author}\nADDON_NAME={addon_plain_name}")
 
 
 if __name__ == "__main__":
@@ -50,3 +49,4 @@ if __name__ == "__main__":
 
     rewrite_main_workflow(addon_url_name)
     rewrite_readme(addon_author, addon_url_name, addon_plain_name)
+    export_variables_to_github_env(addon_author, addon_url_name, addon_plain_name)

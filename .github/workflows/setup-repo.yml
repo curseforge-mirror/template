@@ -28,27 +28,32 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-          cache: 'pip'
 
       - name: Run Setup Script
         run: python repo_setup.py
         env:
           ADDON_NAME: ADDON_NAME_HERE
+
       - name: Commit files
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git commit -m "Update Repo with Addon Info" -a
+
       - name: Push changes
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ env.REPO_SETUP_TOKEN || secrets.GITHUB_TOKEN }}
           branch: ${{ github.ref }}
+
       - name: Update Repo Description
         shell: bash
+        env:
+          ADDON_AUTHOR: ${{ env.ADDON_AUTHOR }}
+          ADDON_NAME: ${{ env.ADDON_NAME }}
         run: |
           curl --silent -X PATCH \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Authorization: token ${{ env.REPO_SETUP_TOKEN || secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github+json" \
             https://api.github.com/repos/$GITHUB_REPOSITORY \
-            -d '{"description":"Mirror of $env.ADDON_AUTHOR's $env.ADDON_NAME."}'
+            -d "{\"description\":\"Mirror of $ADDON_AUTHOR's $ADDON_NAME.\"}" > /dev/null

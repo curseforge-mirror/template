@@ -1,5 +1,9 @@
 name: Pull and Upload Curseforge Files
 on:
+  workflow_run:
+    workflows: ["Setup repository"]
+    types:
+      - completed
   workflow_dispatch:
   # schedule:
   #   - cron: '0 */3 * * *'
