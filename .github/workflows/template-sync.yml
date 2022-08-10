@@ -8,6 +8,8 @@ jobs:
   repo-sync:
     runs-on: ubuntu-latest
     permissions: write-all
+    env:
+      REPO_SETUP_TOKEN: ${{ secrets.REPO_SETUP_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
