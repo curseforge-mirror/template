@@ -1,3 +1,2 @@
-.github/workflows/main.yml
-.github/workflows/template-sync.yml
+*.yml
 README.md
