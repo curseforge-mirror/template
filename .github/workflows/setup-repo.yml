@@ -3,12 +3,14 @@ on:
   push:
     paths:
       - setup.json
+
 jobs:
-  setup:
+  set-up-repo:
     name: Reinitialize repository
     runs-on: ubuntu-latest
     env:
       REPO_SETUP_TOKEN: ${{ secrets.REPO_SETUP_TOKEN }}
+
     steps:
       - name: Do not run on template repository
         shell: bash
@@ -23,22 +25,22 @@ jobs:
         with:
           token: ${{ env.REPO_SETUP_TOKEN || secrets.GITHUB_TOKEN }}
 
-    - uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
-        cache: 'pip'
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip'
 
-    - name: Run Setup Script
-      run: python repo_setup.py
-      env:
-        ADDON_NAME: ADDON_NAME_HERE
-    - name: Commit files
-      run: |
-        git config --local user.email "github-actions[bot]@users.noreply.github.com"
-        git config --local user.name "github-actions[bot]"
-        git commit -m "Add changes" -a
-    - name: Push changes
-      uses: ad-m/github-push-action@master
-      with:
-      	ssh: true
-        branch: ${{ github.ref }}
+      - name: Run Setup Script
+        run: python repo_setup.py
+        env:
+          ADDON_NAME: ADDON_NAME_HERE
+      - name: Commit files
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git commit -m "Add changes" -a
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          ssh: true
+          branch: ${{ github.ref }}
