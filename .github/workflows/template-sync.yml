@@ -14,7 +14,7 @@ jobs:
       - name: actions-template-sync
         uses: AndreasAugustin/actions-template-sync@v0.3.1-draft
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ env.REPO_SETUP_TOKEN || secrets.GITHUB_TOKEN }}
           source_repo_path: curseforge-mirror/template
           upstream_branch: master
           pr_labels: template-sync
