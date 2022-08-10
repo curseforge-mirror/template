@@ -1,3 +1,4 @@
+name: Pull and Upload Curseforge Files
 on:
   workflow_dispatch:
   # schedule:
