@@ -52,9 +52,3 @@ jobs:
             -H "Accept: application/vnd.github+json" \
             https://api.github.com/repos/$GITHUB_REPOSITORY \
             -d '{"description":"Mirror of $env.ADDON_AUTHOR's $env.ADDON_NAME."}'
-          
-          curl --silent -X GET \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github.baptiste-preview+json" \
-            https://api.github.com/repos/$GITHUB_REPOSITORY \
-            | jq --exit-status '.is_template == false';
