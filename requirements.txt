@@ -1,2 +1,2 @@
-cloudscraper
+git+https://github.com/curseforge-mirror/cloudscraper#egg=cloudscraper
 beautifulsoup4
