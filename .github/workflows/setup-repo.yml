@@ -1,9 +1,13 @@
-name: Setup repository
+name: Setup Repository
 on:
   workflow_dispatch:
   push:
     paths:
       - setup.json
+  workflow_run:
+    workflows: ["Template Sync"]
+    types:
+      - completed
 
 jobs:
   set-up-repo:
