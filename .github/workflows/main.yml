@@ -12,6 +12,8 @@ jobs:
   pull_and_upload_files:
     name: Pull and Upload Files
     runs-on: ubuntu-latest
+    env:
+      SCRAPER_API_KEY: ${{ secrets.SCRAPER_API_KEY }}
 
     steps:
     - uses: actions/checkout@v3
@@ -31,6 +33,7 @@ jobs:
       run: python main.py
       env:
         ADDON_NAME: ADDON_NAME_HERE
+        SCRAPER_API_KEY: ${{ env.SCRAPER_API_KEY }}
 
     - name: Get current time
       uses: srfrnk/current-time@master
