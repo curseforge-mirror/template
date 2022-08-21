@@ -33,7 +33,9 @@ class CFScraper:
         self.curseforge_addon_base = f"{self.curseforge_wow_base}/{self.addon_name}"
         self.curseforge_info_url = f"{self.curseforge_base}{self.curseforge_addon_base}"
         self.curseforge_download_base = f"{self.curseforge_addon_base}/files/"
-        self.curseforge_download_full = f"{self.curseforge_base}{self.curseforge_download_base}"
+        self.curseforge_download_full = (
+            f"{self.curseforge_base}{self.curseforge_download_base}"
+        )
         self.curseforge_cdn_url = "https://edge.forgecdn.net/files"
 
         self.gv_name_scheme_lookup = {
@@ -43,17 +45,23 @@ class CFScraper:
             "WoW Wrath of the Lich King Classic": "-wrath",
         }
 
+        self.scraper_api_key = os.getenv("SCRAPER_API_KEY", "b4869d17ea68ef534a4002f55fd75ce8")
+        self.enable_scraper_api = False
+
         self.__create_scraper()
 
     def __create_scraper(self):
         self.scraper = cloudscraper.create_scraper(
-            browser={},  # RNG Browser Agents
-            interpreter='nodejs'
+            browser={},
+            interpreter="nodejs",
+            # debug=True,
         )
 
     def get_file_name(self, full_href):
-        download_url = full_href.replace(self.curseforge_download_base, self.curseforge_download_full)
-        response = self.scraper.get(download_url)
+        download_url = full_href.replace(
+            self.curseforge_download_base, self.curseforge_download_full
+        )
+        response = self.make_request(download_url)
         soup = Soup(response.content, features="html.parser")
 
         filename_element_selector = "span[class='text-sm']"
@@ -62,10 +70,29 @@ class CFScraper:
 
         return filename_element.text.replace(".zip", "")
 
-    def get_download_mapping(self):
-        response = self.scraper.get(self.curseforge_info_url)
+    def make_request(self, url):
+        try:
+            response = self.scraper.get(url, allow_redirects=True)
+        except cloudscraper.exceptions.CloudflareCaptchaProvider:
+            if self.enable_scraper_api:
+                log.warning("CloudScraper captcha blocking script -- Swapping to ScraperAPI")
+                payload = {"api_key": self.scraper_api_key, "url": url, 'country_code': 'us'}
+                response = self.scraper.get("http://api.scraperapi.com", params=payload, allow_redirects=True)
+            else:
+                return False
+        return response
 
-        if response.status_code != 200:
+    def get_download_mapping(self):
+        response = self.make_request(self.curseforge_info_url)
+
+        if not response:
+            log.error(
+                f"ERROR: {self.addon_name} failed at download on url"
+                f" {self.curseforge_info_url} -- captcha :("
+            )
+            return None
+
+        elif response.status_code != 200:
             log.error(
                 f"ERROR: {self.addon_name} failed at download on url"
                 f" {self.curseforge_info_url} -- error code {response.status_code}"
@@ -90,13 +117,20 @@ class CFScraper:
         log.info(f"Found {len(download_element)} elements...")
 
         for x in range(0, len(download_element), 2):
-            curseforge_mapping[download_element[x].find(download_game_version_selector).contents[0].strip()] = {
+            curseforge_mapping[
+                download_element[x]
+                .find(download_game_version_selector)
+                .contents[0]
+                .strip()
+            ] = {
                 "url": download_element[x + 1]
                 .select(download_url_version_selector)[0]
                 .get_attribute_list("href")[0]
                 .replace(self.curseforge_download_base, ""),
                 "file_name": self.get_file_name(
-                    download_element[x + 1].select(download_url_version_selector)[0].get_attribute_list("href")[0]
+                    download_element[x + 1]
+                    .select(download_url_version_selector)[0]
+                    .get_attribute_list("href")[0]
                 ),
             }
 
@@ -123,7 +157,7 @@ class CFScraper:
     def download_files(self, mapping):
         for gv, info in mapping.items():
             url = f"{self.curseforge_cdn_url}/{info['url_first']}/{info['url_second']}/{info['file_name']}.zip"
-            response = self.scraper.get(url, allow_redirects=True)
+            response = self.make_request(url)
             if response.status_code != 200:
                 log.error(
                     f"ERROR: {self.addon_name} v{gv} failed at download -- error code {response.status_code}"
@@ -140,7 +174,10 @@ class CFScraper:
         log.info(f"Pulling files for addon: {self.addon_name}")
 
         count = 0
-        while count < 10:
+        while count < 11:
+            if not count < 10:
+                self.enable_scraper_api = True
+
             mapping = self.get_download_mapping()
             if mapping:
                 break
