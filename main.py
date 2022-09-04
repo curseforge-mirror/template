@@ -98,18 +98,17 @@ class CFScraper:
         curseforge_mapping = {
             "WoW Retail": self.scraper.get(
                 f"https://api.curseforge.com/v1/mods/{mod_id}/files?gameVersionTypeId=517", headers=headers
-            ).json()["data"][0],
+            ).json()["data"],
             "WoW Classic": self.scraper.get(
                 f"https://api.curseforge.com/v1/mods/{mod_id}/files?gameVersionTypeId=67408", headers=headers
-            ).json()["data"][0],
+            ).json()["data"],
             "WoW Burning Crusade Classic": self.scraper.get(
                 f"https://api.curseforge.com/v1/mods/{mod_id}/files?gameVersionTypeId=73246", headers=headers
-            ).json()["data"][0],
+            ).json()["data"],
             "WoW Wrath of the Lich King Classic": self.scraper.get(
                 f"https://api.curseforge.com/v1/mods/{mod_id}/files?gameVersionTypeId=73713", headers=headers
-            ).json()["data"][0],
+            ).json()["data"],
         }
-
         curseforge_mapping = {k: v[0] for k, v in curseforge_mapping.items() if v}
 
         if not curseforge_mapping:
@@ -216,7 +215,7 @@ class CFScraper:
     def run(self):
         log.info(f"Pulling files for addon: {self.addon_name}")
 
-        if self.addon_id != cf_mirror_addon_id:
+        if self.addon_id != 0:
             if self.use_curseforge_api(self.addon_id):
                 log.info("Curseforge API Pull Success!")
                 return
