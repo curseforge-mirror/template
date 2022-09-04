@@ -14,6 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       SCRAPER_API_KEY: ${{ secrets.SCRAPER_API_KEY }}
+      CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
 
     steps:
     - uses: actions/checkout@v3
