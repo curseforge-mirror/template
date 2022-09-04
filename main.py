@@ -122,10 +122,10 @@ class CFScraper:
                     f"\n -----\n{response.text}\n-----"
                 )
                 continue
-            file_name = f"{payload['fileName']}.zip"
-            if not payload["fileName"].endswith(self.gv_name_scheme_lookup[gv]):
-                file_name = f"{payload['fileName']}{self.gv_name_scheme_lookup[gv]}.zip"
-            with open(file_name, "wb") as f:
+            file_name = payload['fileName'].replace(".zip", "")
+            if not file_name.endswith(self.gv_name_scheme_lookup[gv]):
+                file_name = f"{file_name}{self.gv_name_scheme_lookup[gv]}"
+            with open(f"{file_name}.zip", "wb") as f:
                 f.write(response.content)
 
         return True
