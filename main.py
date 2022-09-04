@@ -75,15 +75,27 @@ class CFScraper:
             response = self.scraper.get(url, allow_redirects=True)
         except cloudscraper.exceptions.CloudflareCaptchaProvider:
             if self.enable_scraper_api:
-                log.warning("CloudScraper captcha blocking script -- Swapping to ScraperAPI")
-                payload = {"api_key": self.scraper_api_key, "url": url, 'country_code': 'us'}
-                response = self.scraper.get("http://api.scraperapi.com", params=payload, allow_redirects=True)
+                log.warning("Error: Captcha found, retrying with Scraper")
+                self.make_scraper_request(url)
             else:
                 return False
         return response
 
+    def make_scraper_request(self, url):
+        payload = {"api_key": self.scraper_api_key, "url": url, 'country_code': 'us'}
+
+        try:
+            response = self.scraper.get("http://api.scraperapi.com", params=payload, allow_redirects=True)
+        except cloudscraper.exceptions.CloudflareCaptchaProvider:
+            return False
+        return response
+
     def get_download_mapping(self):
         response = self.make_request(self.curseforge_info_url)
+
+        if self.enable_scraper_api and (not response or response.status_code != 200):
+            log.warning("Error: Retrying with Scraper")
+            response = self.make_scraper_request(self.curseforge_info_url)
 
         if not response:
             log.error(
