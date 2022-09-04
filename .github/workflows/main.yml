@@ -33,7 +33,9 @@ jobs:
       run: python main.py
       env:
         ADDON_NAME: ADDON_NAME_HERE
+        ADDON_ID: ADDON_ID_HERE
         SCRAPER_API_KEY: ${{ env.SCRAPER_API_KEY }}
+        CF_API_TOKEN: ${{ env.CF_API_TOKEN }}
 
     - name: Get current time
       uses: srfrnk/current-time@master

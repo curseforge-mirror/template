@@ -36,8 +36,6 @@ jobs:
 
       - name: Run Setup Script
         run: python repo_setup.py
-        env:
-          ADDON_NAME: ADDON_NAME_HERE
 
       - name: Update Repo Description
         shell: bash
