@@ -6,6 +6,7 @@ import cloudscraper
 from bs4 import BeautifulSoup as Soup
 
 cf_mirror_addon_name = "Enter Addon Name Here For Local Testing"
+cf_mirror_addon_id = "0"
 
 handler = logging.StreamHandler(sys.stdout)
 
@@ -22,20 +23,22 @@ log = logging.getLogger()
 
 
 class CFScraper:
-    def __init__(self, addon_name):
+    def __init__(self, addon_name, addon_id):
 
         if addon_name == cf_mirror_addon_name:
             log.warning("WARNING: Default Addon Name Being Used")
 
+        if addon_id == cf_mirror_addon_id:
+            log.warning("WARNING: Default Addon ID Being Used")
+
         self.addon_name = addon_name
+        self.addon_id = addon_id
         self.curseforge_base = "https://www.curseforge.com"
         self.curseforge_wow_base = "/wow/addons"
         self.curseforge_addon_base = f"{self.curseforge_wow_base}/{self.addon_name}"
         self.curseforge_info_url = f"{self.curseforge_base}{self.curseforge_addon_base}"
         self.curseforge_download_base = f"{self.curseforge_addon_base}/files/"
-        self.curseforge_download_full = (
-            f"{self.curseforge_base}{self.curseforge_download_base}"
-        )
+        self.curseforge_download_full = f"{self.curseforge_base}{self.curseforge_download_base}"
         self.curseforge_cdn_url = "https://edge.forgecdn.net/files"
 
         self.gv_name_scheme_lookup = {
@@ -45,7 +48,8 @@ class CFScraper:
             "WoW Wrath of the Lich King Classic": "-wrath",
         }
 
-        self.scraper_api_key = os.getenv("SCRAPER_API_KEY", "b4869d17ea68ef534a4002f55fd75ce8")
+        self.scraper_api_key = os.getenv("SCRAPER_API_KEY")
+        self.curseforge_api_key = os.getenv("CF_API_TOKEN")
         self.enable_scraper_api = False
 
         self.__create_scraper()
@@ -58,9 +62,7 @@ class CFScraper:
         )
 
     def get_file_name(self, full_href):
-        download_url = full_href.replace(
-            self.curseforge_download_base, self.curseforge_download_full
-        )
+        download_url = full_href.replace(self.curseforge_download_base, self.curseforge_download_full)
         response = self.make_request(download_url)
         soup = Soup(response.content, features="html.parser")
 
@@ -82,13 +84,52 @@ class CFScraper:
         return response
 
     def make_scraper_request(self, url):
-        payload = {"api_key": self.scraper_api_key, "url": url, 'country_code': 'us'}
+        payload = {"api_key": self.scraper_api_key, "url": url, "country_code": "us"}
 
         try:
             response = self.scraper.get("http://api.scraperapi.com", params=payload, allow_redirects=True)
         except (cloudscraper.exceptions.CloudflareCaptchaProvider, cloudscraper.exceptions.CloudflareIUAMError):
             return False
         return response
+
+    def use_curseforge_api(self, mod_id):
+        headers = {"Accept": "application/json", "x-api-key": self.curseforge_api_key}
+
+        curseforge_mapping = {
+            "WoW Retail": self.scraper.get(
+                f"https://api.curseforge.com/v1/mods/{mod_id}/files?gameVersionTypeId=517", headers=headers
+            ).json()["data"][0],
+            "WoW Classic": self.scraper.get(
+                f"https://api.curseforge.com/v1/mods/{mod_id}/files?gameVersionTypeId=67408", headers=headers
+            ).json()["data"][0],
+            "WoW Burning Crusade Classic": self.scraper.get(
+                f"https://api.curseforge.com/v1/mods/{mod_id}/files?gameVersionTypeId=73246", headers=headers
+            ).json()["data"][0],
+            "WoW Wrath of the Lich King Classic": self.scraper.get(
+                f"https://api.curseforge.com/v1/mods/{mod_id}/files?gameVersionTypeId=73713", headers=headers
+            ).json()["data"][0],
+        }
+
+        curseforge_mapping = {k: v[0] for k, v in curseforge_mapping.items() if v}
+
+        if not curseforge_mapping:
+            return False
+
+        for gv, payload in curseforge_mapping.items():
+            response = self.make_request(payload["downloadUrl"])
+            if response.status_code != 200:
+                log.error(
+                    f"ERROR: {self.addon_name} v{gv} failed at download -- error code {response.status_code}"
+                    f"\n -----\n{response.text}\n-----"
+                )
+                continue
+            file_name = f"{payload['fileName']}.zip"
+            if not payload["fileName"].endswith(self.gv_name_scheme_lookup[gv]):
+                file_name = f"{payload['fileName']}{self.gv_name_scheme_lookup[gv]}.zip"
+            with open(file_name, "wb") as f:
+                f.write(response.content)
+
+        return True
 
     def get_download_mapping(self):
         response = self.make_request(self.curseforge_info_url)
@@ -98,10 +139,7 @@ class CFScraper:
             response = self.make_scraper_request(self.curseforge_info_url)
 
         if not response:
-            log.error(
-                f"ERROR: {self.addon_name} failed at download on url"
-                f" {self.curseforge_info_url} -- captcha :("
-            )
+            log.error(f"ERROR: {self.addon_name} failed at download on url {self.curseforge_info_url} -- captcha :(")
             return None
 
         elif response.status_code != 200:
@@ -129,20 +167,13 @@ class CFScraper:
         log.info(f"Found {len(download_element)} elements...")
 
         for x in range(0, len(download_element), 2):
-            curseforge_mapping[
-                download_element[x]
-                .find(download_game_version_selector)
-                .contents[0]
-                .strip()
-            ] = {
+            curseforge_mapping[download_element[x].find(download_game_version_selector).contents[0].strip()] = {
                 "url": download_element[x + 1]
                 .select(download_url_version_selector)[0]
                 .get_attribute_list("href")[0]
                 .replace(self.curseforge_download_base, ""),
                 "file_name": self.get_file_name(
-                    download_element[x + 1]
-                    .select(download_url_version_selector)[0]
-                    .get_attribute_list("href")[0]
+                    download_element[x + 1].select(download_url_version_selector)[0].get_attribute_list("href")[0]
                 ),
             }
 
@@ -185,6 +216,10 @@ class CFScraper:
     def run(self):
         log.info(f"Pulling files for addon: {self.addon_name}")
 
+        if self.addon_id != cf_mirror_addon_id:
+            if self.use_curseforge_api(self.addon_id):
+                return
+
         count = 0
         while count < 11:
             if not count < 10:
@@ -205,5 +240,5 @@ class CFScraper:
 
 
 if __name__ == "__main__":
-    scraper = CFScraper(os.getenv("ADDON_NAME", cf_mirror_addon_name))
+    scraper = CFScraper(os.getenv("ADDON_NAME", cf_mirror_addon_name), os.getenv("ADDON_ID", cf_mirror_addon_id))
     scraper.run()

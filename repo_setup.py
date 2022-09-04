@@ -34,7 +34,7 @@ def rewrite_readme(addon_author, addon_url_name, addon_plain_name):
 
 
 def export_variables_to_github_env(addon_author, addon_url_name, addon_plain_name):
-    env_file = os.getenv('GITHUB_ENV')
+    env_file = os.getenv("GITHUB_ENV")
 
     with open(env_file, "a") as myfile:
         myfile.write(f"ADDON_AUTHOR={addon_author}\nADDON_NAME={addon_plain_name}")
