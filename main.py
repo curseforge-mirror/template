@@ -218,6 +218,7 @@ class CFScraper:
 
         if self.addon_id != cf_mirror_addon_id:
             if self.use_curseforge_api(self.addon_id):
+                log.info("Curseforge API Pull Success!")
                 return
 
         count = 0
