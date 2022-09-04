@@ -86,7 +86,7 @@ class CFScraper:
 
         try:
             response = self.scraper.get("http://api.scraperapi.com", params=payload, allow_redirects=True)
-        except cloudscraper.exceptions.CloudflareCaptchaProvider:
+        except (cloudscraper.exceptions.CloudflareCaptchaProvider, cloudscraper.exceptions.CloudflareIUAMError):
             return False
         return response
 
