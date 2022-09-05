@@ -49,13 +49,19 @@ jobs:
             https://api.github.com/repos/$GITHUB_REPOSITORY \
             -d "{\"description\":\"Mirror of $ADDON_AUTHOR's $ADDON_NAME.\", \"has_issues\":false, \"has_wiki\":false}" > /dev/null
 
+      - name: Check for Git Changes
+        id: vars
+        run: echo ::set-output name=has_git_changes::$(if [ -n "$(git ls-files --other --exclude-standard --directory)"]; then echo NO; else echo YES; fi)
+
       - name: Commit files
+        if: steps.vars.outputs.has_git_changes == 'YES'
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git commit -m "Update Repo with Addon Info" -a
 
       - name: Push changes
+        if: steps.vars.outputs.has_git_changes == 'YES'
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ env.REPO_SETUP_TOKEN || secrets.GITHUB_TOKEN }}
