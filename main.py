@@ -78,7 +78,7 @@ class CFScraper:
         except cloudscraper.exceptions.CloudflareCaptchaProvider:
             if self.enable_scraper_api:
                 log.warning("Error: Captcha found, retrying with Scraper")
-                self.make_scraper_request(url)
+                response = self.make_scraper_request(url)
             else:
                 return False
         return response
