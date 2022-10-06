@@ -84,7 +84,7 @@ class CFScraper:
         return response
 
     def make_scraper_request(self, url):
-        payload = {"api_key": self.scraper_api_key, "url": url, "country_code": "us"}
+        payload = {"api_key": self.scraper_api_key, "url": url, "country_code": "us", "render": "true"}
 
         try:
             response = self.scraper.get("http://api.scraperapi.com", params=payload, allow_redirects=True)
