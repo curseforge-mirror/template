@@ -4,6 +4,7 @@ import time
 import logging
 import cloudscraper
 from bs4 import BeautifulSoup as Soup
+from requests.adapters import Retry
 
 cf_mirror_addon_name = "Enter Addon Name Here For Local Testing"
 cf_mirror_addon_id = "0"
@@ -60,6 +61,16 @@ class CFScraper:
             interpreter="nodejs",
             # debug=True,
         )
+        self.retries = Retry(total=5, backoff_factor=0.1)
+        self.adaptor = cloudscraper.CipherSuiteAdapter(
+            cipherSuite=self.scraper.cipherSuite,
+            ecdhCurve=self.scraper.ecdhCurve,
+            server_hostname=self.scraper.server_hostname,
+            source_address=self.scraper.source_address,
+            ssl_context=self.scraper.ssl_context,
+            max_retries=self.retries,
+        )
+        self.scraper.mount("https://", self.adaptor)
 
     def get_file_name(self, full_href):
         download_url = full_href.replace(self.curseforge_download_base, self.curseforge_download_full)
@@ -122,7 +133,7 @@ class CFScraper:
                     f"\n -----\n{response.text}\n-----"
                 )
                 continue
-            file_name = payload['fileName'].replace(".zip", "")
+            file_name = payload["fileName"].replace(".zip", "")
             if not file_name.endswith(self.gv_name_scheme_lookup[gv]):
                 file_name = f"{file_name}{self.gv_name_scheme_lookup[gv]}"
             with open(f"{file_name}.zip", "wb") as f:
@@ -221,8 +232,8 @@ class CFScraper:
                 return
 
         count = 0
-        while count < 11:
-            if not count < 10:
+        while count < 4:
+            if not count < 3:
                 self.enable_scraper_api = True
 
             mapping = self.get_download_mapping()
