@@ -120,7 +120,9 @@ class CFScraper:
                 f"https://api.curseforge.com/v1/mods/{mod_id}/files?gameVersionTypeId=73713", headers=headers
             ).json()["data"],
         }
-        curseforge_mapping = {k: v[0] for k, v in curseforge_mapping.items() if v}
+        curseforge_mapping = {
+            k: v[0] if "nolib" not in v[0]["displayName"] else v[1] for k, v in curseforge_mapping.items() if v
+        }
 
         if not curseforge_mapping:
             return False
