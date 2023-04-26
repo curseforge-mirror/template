@@ -34,7 +34,7 @@ class CFScraper:
 
         self.addon_name = addon_name
         self.addon_id = addon_id
-        self.curseforge_base = "https://www.curseforge.com"
+        self.curseforge_base = "https://legacy.curseforge.com"
         self.curseforge_wow_base = "/wow/addons"
         self.curseforge_addon_base = f"{self.curseforge_wow_base}/{self.addon_name}"
         self.curseforge_info_url = f"{self.curseforge_base}{self.curseforge_addon_base}"
