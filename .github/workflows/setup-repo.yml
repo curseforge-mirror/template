@@ -11,6 +11,7 @@ on:
 
 jobs:
   set-up-repo:
+    if: "!contains(github.event.head_commit.message, 'Initial')"
     name: Reinitialize repository
     runs-on: ubuntu-latest
     env:
